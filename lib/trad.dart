@@ -62,26 +62,24 @@ typedef Track = ({
 
 /// Parses a CSV-formatted [row] into a [Track].
 ///
-/// Returns `null` if [row] is malformed or cannot be parsed.
+/// Returns `null` if the [row] has an invalid column count or if
+/// primitive types (date, integer duration) cannot be parsed.
 Track? tryParseTrackCsvRow(String row) {
   final fields = parseCsvRow(row);
 
   if (fields.length != _trackFieldCount) return null;
 
-  final trackName = fields[0];
-  final albumName = fields[1];
-  final artists = fields[2].split(';');
   final releaseDate = DateTime.tryParse(fields[3]);
   final durationMs = int.tryParse(fields[4]);
 
-  if (trackName.isEmpty || albumName.isEmpty || artists.isEmpty || releaseDate == null || durationMs == null) {
+  if (releaseDate == null || durationMs == null) {
     return null;
   }
 
   return (
-    artists: artists,
-    trackName: trackName,
-    albumName: albumName,
+    trackName: fields[0],
+    albumName: fields[1],
+    artists: fields[2].split(';'),
     releaseDate: releaseDate,
     duration: Duration(milliseconds: durationMs),
   );
