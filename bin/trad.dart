@@ -1,4 +1,5 @@
 import 'package:trad/trad.dart';
+import 'package:trad/validation.dart';
 
 /// Sample CSV data containing music tracks for demonstration and testing.
 ///
@@ -36,6 +37,23 @@ void main() {
   final entries = sampleTrackCsvRows.map(tryParseTrackCsvRow).toList();
 
   for (var i = 0; i < entries.length; i++) {
-    print("${i + 1} ${entries[i]}");
+    final track = entries[i];
+    final number = i + 1;
+
+    if (track == null) {
+      print('$number. [Parse Error] Failed to parse row.');
+      continue;
+    }
+
+    final violations = validateTrack(track);
+    if (violations.isNotEmpty) {
+      print(
+        '$number. [Invalid] ${track.trackName}:\n> ${violations.join('\n> ')}',
+      );
+    } else {
+      print(
+        '$number. [Valid] ${track.trackName} (${track.artists.join(', ')})',
+      );
+    }
   }
 }
