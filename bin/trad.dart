@@ -1,3 +1,5 @@
+import 'package:trad/trad.dart';
+
 /// Sample CSV data containing music tracks for demonstration and testing.
 ///
 /// Columns (in order):
@@ -29,3 +31,11 @@ const sampleTrackCsvRows = [
   '"Don\'t Forget","DELTARUNE Chapter 1 (Original Game Soundtrack)","Toby Fox;Laura Shigihara",2018-11-01,51424',
   '"乙女の祈り","ユートピア","Chihiro Yamanaka",2018-06-20,256360',
 ];
+
+void main() {
+  final entries = sampleTrackCsvRows.map(tryParseTrackCsvRow).toList();
+
+  for (var i = 0; i < entries.length; i++) {
+    print("${i + 1} ${entries[i]}");
+  }
+}
