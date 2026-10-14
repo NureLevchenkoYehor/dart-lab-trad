@@ -1,4 +1,4 @@
-import 'package:trad/trad.dart';
+import 'package:trad/core.dart';
 import 'package:trad/validation.dart';
 
 /// Sample CSV data containing music tracks for demonstration and testing.
