@@ -1,4 +1,5 @@
 import 'package:trad/core.dart';
+import 'package:trad/processing.dart';
 import 'package:trad/validation.dart';
 
 /// Sample CSV data containing music tracks for demonstration and testing.
@@ -36,6 +37,7 @@ const sampleTrackCsvRows = [
 void main() {
   final entries = sampleTrackCsvRows.map(tryParseTrackCsvRow).toList();
 
+  print('--- Parsing and Validation ---');
   for (var i = 0; i < entries.length; i++) {
     final track = entries[i];
     final number = i + 1;
@@ -55,5 +57,48 @@ void main() {
         '$number. [Valid] ${track.trackName} (${track.artists.join(', ')})',
       );
     }
+  }
+
+  final validTracks = entries
+      .whereType<Track>()
+      .where((t) => validateTrack(t).isEmpty)
+      .toList();
+
+  print('\n--- Filter by Artist (Frizk) ---');
+  final frizkTracks = filterTracksByArtist(validTracks, 'Frizk');
+  for (final t in frizkTracks) {
+    print('- "${t.trackName}" from "${t.albumName}"');
+  }
+
+  print('\n--- Unique Artists ---');
+  final uniqueArtists = extractUniqueArtists(validTracks);
+  print(uniqueArtists.join(', '));
+
+  print('\n--- Average Duration ---');
+  final avgDuration = calculateAverageDuration(validTracks);
+  final minutes = avgDuration.inMinutes;
+  final seconds = avgDuration.inSeconds % 60;
+  print('Average track duration: ${minutes}m ${seconds}s');
+
+  print('\n--- Average Duration by Album ---');
+  final groupedByAlbum = groupTracksByAlbum(validTracks);
+  final avgByAlbum = calculateAverageDurationByAlbum(groupedByAlbum);
+  for (final entry in avgByAlbum.entries) {
+    final trackCount = groupedByAlbum[entry.key]!.length;
+    print(
+      '- "${entry.key}" ($trackCount tracks): ${entry.value.inSeconds}s avg',
+    );
+  }
+
+  print('\n--- Sorted by Album then Title (Ascending) ---');
+  final sortedAsc = sortTracksByAlbumThenTitle(validTracks, asc: true);
+  for (final t in sortedAsc) {
+    print('- [${t.albumName}] ${t.trackName}');
+  }
+
+  print('\n--- Sorted by Album then Title (Descending) ---');
+  final sortedDesc = sortTracksByAlbumThenTitle(validTracks, asc: false);
+  for (final t in sortedDesc) {
+    print('- [${t.albumName}] ${t.trackName}');
   }
 }
