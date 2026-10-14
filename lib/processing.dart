@@ -63,6 +63,15 @@ Map<String, Duration> calculateAverageDurationByAlbum(
   });
 }
 
+/// Calculates the total track duration for each album in [groupedTracks].
+Map<String, Duration> calculateTotalDurationByAlbum(
+  Map<String, List<Track>> groupedTracks,
+) {
+  return groupedTracks.map((album, tracks) {
+    return MapEntry(album, calculateTotalDuration(tracks));
+  });
+}
+
 /// Sorts [tracks] primarily by album name and secondarily by track name.
 ///
 /// Sorts in ascending order by default. Set [asc] to `false` for descending order.
