@@ -20,18 +20,19 @@ Set<String> extractUniqueArtists(List<Track> tracks) {
   return tracks.expand((track) => track.artists).toSet();
 }
 
+int _totalDurationMs(List<Track> tracks) {
+  return tracks.fold<int>(
+    0,
+    (sum, track) => sum + track.duration.inMilliseconds,
+  );
+}
+
 /// Calculates the average duration of the provided [tracks].
 ///
 /// Returns [Duration.zero] if [tracks] is empty.
 Duration calculateAverageDuration(List<Track> tracks) {
   if (tracks.isEmpty) return Duration.zero;
-
-  final totalMilliseconds = tracks.fold<int>(
-    0,
-    (sum, track) => sum + track.duration.inMilliseconds,
-  );
-
-  return Duration(milliseconds: totalMilliseconds ~/ tracks.length);
+  return Duration(milliseconds: _totalDurationMs(tracks) ~/ tracks.length);
 }
 
 /// Groups [tracks] by their album title.
