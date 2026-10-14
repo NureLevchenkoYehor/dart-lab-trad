@@ -35,6 +35,14 @@ Duration calculateAverageDuration(List<Track> tracks) {
   return Duration(milliseconds: _totalDurationMs(tracks) ~/ tracks.length);
 }
 
+/// Calculates the total duration of the provided [tracks].
+///
+/// Returns [Duration.zero] if [tracks] is empty.
+Duration calculateTotalDuration(List<Track> tracks) {
+  if (tracks.isEmpty) return Duration.zero;
+  return Duration(milliseconds: _totalDurationMs(tracks));
+}
+
 /// Groups [tracks] by their album title.
 Map<String, List<Track>> groupTracksByAlbum(List<Track> tracks) {
   final groups = <String, List<Track>>{};
