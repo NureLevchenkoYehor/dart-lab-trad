@@ -101,4 +101,7 @@ void main() {
   for (final t in sortedDesc) {
     print('- [${t.albumName}] ${t.trackName}');
   }
+
+  final defaultReport = formatArtistReport(validTracks, 'Frizk');
+  print('\n$defaultReport');
 }
