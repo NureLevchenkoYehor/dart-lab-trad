@@ -88,3 +88,19 @@ List<Track> sortTracksByAlbumThenTitle(List<Track> tracks, {bool asc = true}) {
     return a.trackName.compareTo(b.trackName) * direction;
   });
 }
+
+/// Creates a predicate that filters tracks released within a maximum age of [maxDays].
+///
+/// The age of a track is computed against [referenceDate] (defaults to [DateTime.now]).
+bool Function(Track) createMaxAgeFilter({
+  required int maxDays,
+  DateTime? referenceDate,
+}) {
+  final baselineDate = referenceDate ?? DateTime.now();
+
+  return (Track track) {
+    final age = baselineDate.difference(track.releaseDate);
+
+    return age.inDays >= 0 && age.inDays <= maxDays;
+  };
+}
