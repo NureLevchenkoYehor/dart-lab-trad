@@ -114,4 +114,10 @@ void main() {
     final ageInDays = DateTime.now().difference(t.releaseDate).inDays;
     print('- "${t.trackName}" (${t.releaseDate.year}, $ageInDays days old)');
   }
+
+  print('\n--- Tracks With Date Censored ---');
+  for (final t in validTracks) {
+    final releaseDate = t.releaseDate.toIso8601String().split('T').first;
+    print('- [${t.albumName}] ${t.trackName} | ${censorDate(releaseDate)}');
+  }
 }
