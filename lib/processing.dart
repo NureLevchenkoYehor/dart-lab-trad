@@ -89,19 +89,22 @@ List<Track> sortTracksByAlbumThenTitle(List<Track> tracks, {bool asc = true}) {
   });
 }
 
-/// Creates a predicate that filters tracks released within a maximum age of [maxDays].
+/// Creates a predicate that checks whether a track was released within the specified
+/// number of [days] before [beforeDate] (defaults to [DateTime.now]).
 ///
-/// The age of a track is computed against [referenceDate] (defaults to [DateTime.now]).
-bool Function(Track) createMaxAgeFilter({
-  required int maxDays,
-  DateTime? referenceDate,
-}) {
-  final baselineDate = referenceDate ?? DateTime.now();
+/// For example:
+/// ```dart
+/// // Matches tracks released between October 10 and October 15, 2000:
+/// final recentTracks = tracks
+///   .where(releasedWithin(days: 5, before: DateTime(2000, 10, 15)))
+///   .toList();
+/// ```
+bool Function(Track) releasedWithin({required int days, DateTime? beforeDate}) {
+  final targetDate = beforeDate ?? DateTime.now();
 
   return (Track track) {
-    final age = baselineDate.difference(track.releaseDate);
-
-    return age.inDays >= 0 && age.inDays <= maxDays;
+    final daysAgo = targetDate.difference(track.releaseDate).inDays;
+    return daysAgo >= 0 && daysAgo <= days;
   };
 }
 
