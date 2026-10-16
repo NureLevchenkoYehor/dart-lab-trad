@@ -106,9 +106,7 @@ void main() {
   print('\n$defaultReport');
 
   print('\n--- Tracks Released Within Last 1200 Days ---');
-  final isRecent = createMaxAgeFilter(maxDays: 1200);
-
-  final recentTracks = validTracks.where(isRecent).toList();
+  final recentTracks = validTracks.where(releasedWithin(days: 1200)).toList();
 
   for (final t in recentTracks) {
     final ageInDays = DateTime.now().difference(t.releaseDate).inDays;
