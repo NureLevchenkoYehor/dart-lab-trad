@@ -104,3 +104,38 @@ bool Function(Track) createMaxAgeFilter({
     return age.inDays >= 0 && age.inDays <= maxDays;
   };
 }
+
+/// Compiled regex pattern for matching ISO-8601 date variants (`YYYY`, `YYYY-MM`, `YYYY-MM-DD`).
+final _datePattern = RegExp(
+  r'^(?<year>\d{4})(?:-(?<month>\d{2})(?:-(?<day>\d{2}))?)?$',
+);
+
+/// Masks the month and day of a [date], preserving only the year.
+///
+/// Supports `YYYY`, `YYYY-MM`, and `YYYY-MM-DD` formats.
+/// If the input does not match any of these formats, it is returned unmodified.
+///
+/// Throws a [StateError] if the internal regex pattern matched but failed to capture
+/// the mandatory `year` group.
+String censorDate(String date) {
+  return date.replaceAllMapped(_datePattern, (match) {
+    final regExpMatch = match as RegExpMatch;
+    final year = regExpMatch.namedGroup('year');
+    if (year == null) {
+      throw StateError(
+        'Mandatory group was not captured in matched date "$date". '
+        'Verify the regex definition.',
+      );
+    }
+    final month = regExpMatch.namedGroup('month');
+    final day = regExpMatch.namedGroup('day');
+
+    if (day != null) {
+      return '$year-**-**';
+    }
+    if (month != null) {
+      return '$year-**';
+    }
+    return year;
+  });
+}
