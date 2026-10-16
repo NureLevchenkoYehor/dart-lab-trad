@@ -13,7 +13,7 @@ import 'package:trad/validation.dart';
 ///
 /// Intentionally corrupted rows:
 /// - row 5, field `Duration`: `110125` → `sechs-sieben` (non-integer number)
-/// - row 7, field `Release date`: `1962` → `MCMLXII` (invalid date format)
+/// - row 7, field `Release date`: `1962` → `00-1962-00` (invalid date format)
 /// - row 10, field `Album title`: `"Припустим"` → (empty field)
 /// - row 11, field `Artist name(s)`: `,"The Unsleeping"` → (missing field, 4 columns instead of 5)
 const sampleTrackCsvRows = [
@@ -23,7 +23,7 @@ const sampleTrackCsvRows = [
   '"Her Name Is Yubin Lady","Her Name Is Yubin Lady","Oliver Hoss",2021-01-20,179355',
   '"supїdo","supїdo","фрози",2023-08-11,sechs-sieben',
   '"It\'s Been a Long, Long Time","Texas Chatter","Harry James",2008-10-29,205773',
-  '"Oh, Pretty Woman","Oh, Pretty Woman","Roy Orbison",MCMLXII,178929',
+  '"Oh, Pretty Woman","Oh, Pretty Woman","Roy Orbison",00-1962-00,178929',
   '"Upside Down & Inside Out","Hungry Ghosts","OK Go",2014-10-14,187866',
   '"The Writing\'s On the Wall","Hungry Ghosts","OK Go",2014-10-14,213030',
   '"Припустим",,"The Unsleeping",2020-05-26,171587',
