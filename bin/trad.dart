@@ -82,12 +82,10 @@ void main() {
 
   print('\n--- Average Duration by Album ---');
   final groupedByAlbum = groupTracksByAlbum(validTracks);
-  final avgByAlbum = calculateAverageDurationByAlbum(groupedByAlbum);
-  for (final entry in avgByAlbum.entries) {
-    final trackCount = groupedByAlbum[entry.key]!.length;
-    print(
-      '- "${entry.key}" ($trackCount tracks): ${entry.value.inSeconds}s avg',
-    );
+  for (final MapEntry(key: album, value: albumTracks)
+      in groupedByAlbum.entries) {
+    final avg = calculateAverageDuration(albumTracks);
+    print('- "$album" (${albumTracks.length} tracks): ${avg.inSeconds}s avg');
   }
 
   print('\n--- Sorted by Album then Title (Ascending) ---');
