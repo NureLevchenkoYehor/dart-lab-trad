@@ -2,6 +2,10 @@ import 'package:trad/src/models/track.dart';
 import 'package:trad/src/processing.dart';
 
 export 'package:trad/src/csv_parsing.dart';
+export 'package:trad/src/models/album.dart';
+export 'package:trad/src/models/genre.dart';
+export 'package:trad/src/models/identifiable.dart';
+export 'package:trad/src/models/mixins.dart';
 export 'package:trad/src/models/track.dart';
 export 'package:trad/src/processing.dart';
 export 'package:trad/src/validation.dart';

@@ -39,9 +39,9 @@ const sampleTrackCsvRows = [
 ];
 
 void main() {
-  final entries = sampleTrackCsvRows.map(tryParseTrackCsvRow).toList();
+  print('\n--- 1. CSV Parsing & Domain Validation ---');
+  final entries = sampleTrackCsvRows.map(Track.tryFromCsv).toList();
 
-  print('--- Parsing and Validation ---');
   for (var i = 0; i < entries.length; i++) {
     final track = entries[i];
     final number = i + 1;
@@ -58,7 +58,8 @@ void main() {
       );
     } else {
       print(
-        '$number. [Valid] ${track.trackName} (${track.artists.join(', ')})',
+        '$number. [Valid] ${track.trackName} (${track.artists.join(', ')}) '
+        '[${track.formattedDuration}] [Single: ${track.isSingle}]',
       );
     }
   }
@@ -68,48 +69,92 @@ void main() {
       .where((t) => validateTrack(t).isEmpty)
       .toList();
 
-  print('\n--- Filter by Artist (Frizk) ---');
-  final frizkTracks = filterTracksByArtist(validTracks, 'Frizk');
-  for (final t in frizkTracks) {
-    print('- "${t.trackName}" from "${t.albumName}"');
+  print('\n--- 2. Factory Constructors: Cached & WithDefault ---');
+  final cachedA = Track.cached(
+    id: 'frizk:all_my_fellas',
+    trackName: 'ALL MY FELLAS',
+    albumName: 'ALL MY FELLAS',
+    artists: const ['Frizk'],
+    releaseDate: DateTime.utc(2023, 9, 19),
+    duration: const Duration(seconds: 141),
+  );
+  final cachedB = Track.cached(
+    id: 'frizk:all_my_fellas',
+    trackName: 'ALL MY FELLAS',
+    albumName: 'ALL MY FELLAS',
+    artists: const ['Frizk'],
+    releaseDate: DateTime.utc(2023, 9, 19),
+    duration: const Duration(seconds: 141),
+  );
+  print('Identical cached instances: ${identical(cachedA, cachedB)}');
+
+  final fallbackTrack = Track.withDefault();
+  print('Fallback default track: $fallbackTrack');
+
+  print('\n--- 3. Operator == & hashCode (Set Deduplication) ---');
+  final trackCopy1 = Track.create(
+    id: 'frizk:bitrate',
+    trackName: 'Bitrate',
+    albumName: 'Forgotten Arcade',
+    artists: const ['Frizk'],
+    releaseDate: DateTime.utc(2023, 10, 27),
+    duration: const Duration(milliseconds: 88285),
+  );
+  final trackCopy2 = Track.create(
+    id: 'frizk:bitrate',
+    trackName: 'Bitrate',
+    albumName: 'Forgotten Arcade',
+    artists: const ['Frizk'],
+    releaseDate: DateTime.utc(2023, 10, 27),
+    duration: const Duration(milliseconds: 88285),
+  );
+  final trackSet = <Track>{trackCopy1, trackCopy2};
+  print('trackCopy1 == trackCopy2: ${trackCopy1 == trackCopy2}');
+  print('Set size with two equal elements: ${trackSet.length} (expected: 1)');
+
+  print('\n--- 4. Mixin Auditable on Identifiable (Track & Album) ---');
+  final sampleAlbum = Album(
+    id: 'alb-forgotten-arcade',
+    title: 'Forgotten Arcade',
+    artist: 'Frizk',
+    releaseYear: 2023,
+  );
+  print(validTracks.first.formatAuditEntry(action: 'STREAM'));
+  print('Track URN: ${validTracks.first.urn}');
+  print(sampleAlbum.formatAuditEntry(action: 'PURCHASE_ALBUM'));
+  print('Album URN: ${sampleAlbum.urn}');
+
+  print('\n--- 5. Enhanced Enum MusicGenre ---');
+  for (final genre in MusicGenre.values) {
+    print(
+      '${genre.formatBadge()} (Explicit: ${genre.allowsExplicitLyrics}, Code: ${genre.code})',
+    );
   }
 
-  print('\n--- Unique Artists ---');
+  print('\n--- 6. Collection Processing Pipelines ---');
+  final frizkTracks = filterTracksByArtist(validTracks, _targetArtist);
+  print('Frizk tracks count: ${frizkTracks.length}');
+
   final uniqueArtists = extractUniqueArtists(validTracks);
-  print(uniqueArtists.join(', '));
+  print('Unique artists: ${uniqueArtists.join(', ')}');
 
-  print('\n--- Average Duration ---');
-  final avgDuration = calculateAverageDuration(validTracks);
-  final minutes = avgDuration.inMinutes;
-  final seconds = avgDuration.inSeconds % 60;
-  print('Average track duration: ${minutes}m ${seconds}s');
-
-  print('\n--- Average Duration by Album ---');
-  final groupedByAlbum = groupTracksByAlbum(validTracks);
-  for (final MapEntry(key: album, value: albumTracks)
-      in groupedByAlbum.entries) {
-    final avg = calculateAverageDuration(albumTracks);
-    print('- "$album" (${albumTracks.length} tracks): ${avg.inSeconds}s avg');
-  }
-
-  print('\n--- Sorted by Album then Title (Ascending) ---');
   final sortedAsc = sortTracksByAlbumThenTitle(validTracks, asc: true);
-  for (final t in sortedAsc) {
-    print('- [${t.albumName}] ${t.trackName}');
-  }
+  print(
+    'First alphabetically: [${sortedAsc.first.albumName}] ${sortedAsc.first.trackName}',
+  );
 
-  print('\n--- Sorted by Album then Title (Descending) ---');
   final sortedDesc = sortTracksByAlbumThenTitle(validTracks, asc: false);
-  for (final t in sortedDesc) {
-    print('- [${t.albumName}] ${t.trackName}');
-  }
+  print(
+    'First reverse: [${sortedDesc.first.albumName}] ${sortedDesc.first.trackName}',
+  );
 
-  final defaultReport = formatArtistReport(validTracks, 'Frizk');
-  print('\n$defaultReport');
+  final report = formatArtistReport(validTracks, _targetArtist);
+  print('\n$report');
 
-  print('\n--- Tracks Released Within Last 1200 Days ---');
-  final recentTracks = validTracks.where(releasedWithin(days: 1200)).toList();
-
+  print('--- Recent Tracks (within $_recentReleaseDaysThreshold days) ---');
+  final recentTracks = validTracks
+      .where(releasedWithin(days: _recentReleaseDaysThreshold))
+      .toList();
   for (final t in recentTracks) {
     final ageInDays = DateTime.now().difference(t.releaseDate).inDays;
     print('- "${t.trackName}" (${t.releaseDate.year}, $ageInDays days old)');
