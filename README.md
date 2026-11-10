@@ -1,5 +1,251 @@
 # Trad
 
+## Лабораторна робота №2. Об’єктно-орієнтована модель предметної області
+
+### Структура програми
+
+Програма є консольним каталогом музичних творів, розширеним з обробки записів (Лабораторна робота 1) до повноцінної об’єктно-орієнтованої моделі предметної області (Лабораторна робота 2).
+
+У ході реструктуризації модулі `csv_parsing.dart`, `processing.dart` та `validation.dart` було перенесено з кореня `lib/` до внутрішнього каталогу `lib/src/` відповідно до настанов [Effective Dart](https://dart.dev/effective-dart) щодо організації пакетів:
+
+- Файли реалізації та внутрішньої логіки інкапсульовано в підкаталозі `lib/src/` (зокрема моделі — в `lib/src/models/`).
+- Бібліотека [`lib/core.dart`](lib/core.dart) виступає єдиним публічним фасадом пакету, що реекспортує всі необхідні сутності та функції для зовнішніх споживачів (`bin/trad.dart` та тестів).
+
+Оновлене дерево ієрархії проєкту:
+
+```txt
+trad/
+├── bin/
+│   └── trad.dart                   # Консольна демонстрація всіх можливостей моделі
+├── lib/
+│   ├── core.dart                   # Публічний фасад бібліотеки: експорт моделей, утиліт та звітності
+│   └── src/
+│       ├── csv_parsing.dart        # Низькорівневий синтаксичний розбір рядків CSV
+│       ├── processing.dart         # Операції над колекціями: фільтрація, сортування, агрегація
+│       ├── validation.dart         # Перевірка бізнес-правил та обмежень предметної області
+│       └── models/
+│           ├── identifiable.dart   # Базовий інтерфейс сутності з унікальним ідентифікатором
+│           ├── mixins.dart         # Домішка Auditable з обмеженням on Identifiable
+│           ├── genre.dart          # Розширене перелічення MusicGenre з полями та методами
+│           ├── track.dart          # Незмінний клас-сутність Track (первинний конструктор Dart 3.13)
+│           ├── album.dart          # Клас-контейнер Album (альтернативна гілка для домішки)
+│           ├── audio_item.dart     # Запечатана ієрархія AudioItem з поліморфними методами
+│           ├── repository.dart     # Узагальнене сховище Repository<T extends Identifiable>
+│           └── extensions.dart     # Методи розширення для Duration, DateTime та Iterable<Track>
+└── test/
+    └── trad_test.dart              # Модульні тести для перевірки всіх компонентів моделі
+```
+
+## Обґрунтування архітектурних рішень
+
+### 1. Перехід до об’єктно-орієнтованої моделі
+
+У першій лабораторній роботі сутність `Track` була анонімним іменованим записом (`typedef Track = ({...})`). У даній роботі `Track` реалізовано як незмінний (`immutable`) клас, що інкапсулює:
+
+- Усі метадані аудіотреку у `final`-полях;
+- Обчислювані властивості через геттери (`releaseYear`, `isSingle`, `leadArtist`, `formattedDuration`);
+- Іменований конструктор розбору CSV `Track.fromCsv`;
+- Фабричний конструктор із кешуванням екземплярів `Track.cached`;
+- Фабричний конструктор для значень за замовчуванням `Track.withDefault`;
+- Перевизначення `operator ==` та `hashCode` для порівняння за значенням;
+- Перевизначення `toString()`.
+
+### 2. Первинний конструктор (Dart 3.13)
+
+Клас `Track` реалізовано з використанням синтаксису первинного конструктора:
+
+```dart
+class Track(
+  @override final String id,
+  final String trackName,
+  final String albumName,
+  final List<String> artists,
+  final DateTime releaseDate,
+  final Duration duration, {
+  final MusicGenre genre = MusicGenre.soundtrack,
+}) extends Identifiable with Auditable { ... }
+```
+
+#### Порівняння з генеративним конструктором
+
+1. **Обсяг коду**:
+   - У традиційному Dart-класі потрібно двічі дублювати кожне поле: спочатку у списку оголошень (`final String trackName;`), а потім у списку параметрів конструктора (`Track({required this.trackName, ...})`).
+   - У первинному конструкторі оголошення полів та їх ініціалізація поєднані в заголовку класу, що скорочує шаблонний код на 15–20 рядків і спрощує супровід.
+2. **Поведінка**:
+   - *Що не змінилося*: Поля залишаються строго типізованими та незмінними (`final`); доступ до них здійснюється однаково (`track.trackName`); клас може містити вторинні фабричні та іменовані конструктори, методи, геттери та перевантажені оператори.
+   - *Що змінилося*: Вторинні конструктори зобов’язані делегувати ініціалізацію первинному конструктору (`: this(...)`); на відміну від звичайного конструктора, первинний конструктор у поточній версії компілятора не позначається ключовим словом `const`.
+
+### 3. Перевизначення `==` та `hashCode` (Експеримент із `Set`)
+
+Для класу `Track` реалізовано структурне порівняння за всіма значущими полями:
+
+- `operator ==` перевіряє рівність `id`, `trackName`, `albumName`, елементів списку `artists` через покомпонентне порівняння, `releaseDate`, `duration` та `genre`.
+- `hashCode` обчислюється через `Object.hash` та `Object.hashAll(artists)`.
+
+#### Результати експерименту
+
+- **З перевизначеними `==` та `hashCode`**:
+  При додаванні двох окремо створених об'єктів з однаковими значеннями властивостей у `Set<Track>` розмір колекції дорівнює **1**. `Set` обчислює однаковий хеш-код, потрапляє в один кошик і методом `==` підтверджує дублікат.
+- **Без перевизначеного `hashCode` (лише з `==`)**:
+  Розмір `Set<Track>` стає **2**. Кожен екземпляр отримує системний ідентифікаційний хеш-код від `Object.hashCode` за адресою у пам'яті. Об'єкти потрапляють у різні кошики хеш-таблиці, і оператор `==` навіть не викликається.
+
+### 4. Запечатана ієрархія (`sealed`) та вичерпне зіставлення зі зразком
+
+Оголошено запечатаний базовий клас `AudioItem` із підтипами:
+
+1. `StudioTrack` — студійний запис із зазначенням назви студії звукозапису;
+2. `LiveRecording` — концертний запис із назвою локації та датою виступу;
+3. `RemixTrack` — ремікс із зазначенням автора обробки та оригінальної назви;
+4. `PodcastEpisode` — розмовний випуск подкасту з номером епізоду.
+
+Кожен підтип реалізує поліморфний метод `formatSummary()`.
+
+#### Вичерпний `switch`-вираз без `default`
+
+Функція `describeAudioItem` аналізує тип екземпляра без гілки `default`.
+Якщо додати новий підтип (наприклад, `PodcastEpisode`) і не обробити його у виразі:
+
+```dart
+String describeAudioItem(AudioItem item) {
+  return switch (item) {
+    StudioTrack(:final duration, :final studioName) when duration.inMinutes >= 10 => ...,
+    StudioTrack(:final studioName) => ...,
+    LiveRecording(:final venue) => ...,
+    RemixTrack(:final remixer, :final originalTrackTitle) => ...,
+  };
+}
+```
+
+Компілятор Dart генерує помилку на етапі статичного аналізу:
+
+```txt
+error - The type 'AudioItem' isn't exhaustively matched by the switch cases
+since it doesn't match the pattern 'PodcastEpisode()'.
+Try adding a wildcard pattern or cases that match 'PodcastEpisode()'. - non_exhaustive_switch_expression
+```
+
+Це гарантує архітектурну надійність: розширення моделі новим типом не призведе до непомічених помилок у runtime.
+
+### 5. Домішка `Auditable` з обмеженням `on Identifiable`
+
+Домішка `Auditable` додає сутностям функціональність формування аудит-записів (`formatAuditEntry`) та стандартизованих URN (`urn:trad:entity:$id`).
+
+Підмішана до двох класів із принципово різних гілок предметної області:
+
+- `Track` — конкретна одиниця аудіовідтворення;
+- `Album` — реліз-контейнер для групи треків.
+
+#### Чому успадкування тут не підходить
+
+1. **Принцип єдиної відповідальності та семантика**: Альбом не є треком, а трек не є альбомом. Створення штучного предка (наприклад, `AuditableEntity`) для успадкування поведінки зв’язало б неспоріднені класи жорсткою ієрархією.
+2. **Одинарне успадкування в Dart**: Мова Dart не підтримує множинне успадкування реалізації. Якби класи успадковували спільну поведінку через `extends BaseAuditable`, вони не змогли б успадковувати інші базові класи своєї предметної гілки (наприклад, `AudioItem`).
+3. **Обмеження `on Identifiable`**: Звужує застосування домішки виключно до типів, що гарантують наявність властивості `id`, і відкриває до неї безпечний типізований доступ всередині домішки без жодних динамічних приведень типу.
+
+### 6. Методи розширення (Extension Methods)
+
+Оголошено методи розширення на вбудовані типи:
+
+- `DurationFormatting on Duration`:
+  - `toMmSs()` — форматування тривалості у вигляд `m:ss` або `h:mm:ss`;
+  - `toMinutesSecondsUk()` — форматування українською мовою (`29 хв 25 с`).
+- `DateTimeDomainExtensions on DateTime`:
+  - `toIsoDateOnly()` — формування рядка `YYYY-MM-DD`;
+  - `ageInDays({DateTime? targetDate})` — розрахунок віку запису в днях.
+- `TrackIterableExtensions on Iterable<Track>`:
+  - `totalDuration` — сумарна тривалість усіх треків у колекції;
+  - `averageDuration` — середня тривалість треку;
+  - `allUniqueArtists` — множина всіх унікальних авторів у колекції.
+
+### 7. Узагальнене сховище `Repository<T extends Identifiable>`
+
+Клас `Repository<T extends Identifiable>` реалізує типізоване in-memory сховище з операціями `add`, `addAll`, `findById`, `where`, `getAll`, `remove` та `clear`.
+
+#### Що дає обмеження `<T extends Identifiable>`
+
+1. **Типобезпека**: До сховища можна додавати лише екземпляри класів, які гарантовано мають властивість `id`. Спроба використати довільний тип викличе помилку компіляції.
+2. **Прямий доступ до членів**: Компілятор дозволяє звертатися до `item.id` як до ключа внутрішньої таблиці `_items[item.id] = item` без звернення до `dynamic` або явного приведення `(item as Identifiable)`.
+
+### 8. Розширене перелічення `MusicGenre`
+
+Перелічення з членами:
+
+- Константи: `rock`, `pop`, `electronic`, `soundtrack`, `classical`;
+- Поля: `final String code`, `final String displayName`, `final bool allowsExplicitLyrics`;
+- Константний конструктор: `const MusicGenre({...})`;
+- Методи:
+  - `formatBadge()` — повертає бейдж виду `[OST] Soundtrack`;
+  - `matches(String query)` — перевіряє відповідність коду або назви запиту (case-insensitive).
+
+### 9. Записи (`record`) та деструктуризація
+
+Функція `computeCatalogMetrics(Iterable<Track> tracks)` повертає іменований запис:
+
+```dart
+typedef CatalogMetrics = ({
+  Duration totalDuration,
+  Duration averageDuration,
+  int trackCount,
+  Track? longestTrack,
+});
+```
+
+Розбір результату здійснюється за допомогою зіставлення зі зразком та деструктуризації:
+
+```dart
+final (:totalDuration, :averageDuration, :trackCount, :longestTrack) =
+    computeCatalogMetrics(validTracks);
+```
+
+### 10. Зіставлення зі зразком з охоронцем (`when`)
+
+У функції `describeAudioItem` та `categorizeTrackPlayback` використано охоронні умови:
+
+```dart
+String categorizeTrackPlayback(Track track) {
+  return switch (track) {
+    Track(:final duration) when duration.inMinutes >= 10 =>
+      'Epic (${duration.inMinutes} min)',
+    Track(:final duration) when duration.inSeconds < 60 =>
+      'Interlude (${duration.inSeconds} sec)',
+    Track(:final artists) when artists.length > 2 =>
+      'Collaboration (${artists.length} artists)',
+    Track() => 'Standard Track (${track.formattedDuration})',
+  };
+}
+```
+
+## Результати перевірки інструментами
+
+### 1. `dart analyze`
+
+```ps
+> dart analyze
+Analyzing trad...
+No issues found!
+```
+
+### 2. `dart test`
+
+```ps
+> dart test
+00:00 +21: All tests passed!
+```
+
+### 3. `dart format`
+
+```ps
+> dart format --output=none .
+Formatted 14 files (0 changed) in 0.07 seconds.
+```
+
+### 4. `dart fix --dry-run`
+
+```ps
+> dart fix --dry-run
+Computing fixes in trad (dry run)...
+Nothing to fix!
+```
+
 ## Лабораторна робота №1. Функції та обробка колекцій
 
 ### Структура програми
