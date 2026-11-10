@@ -1,4 +1,4 @@
-import 'package:trad/core.dart';
+import 'package:trad/src/models/track.dart';
 
 /// Filters [tracks] by the specified [artist] name (case-insensitive).
 ///

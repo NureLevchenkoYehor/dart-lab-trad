@@ -1,4 +1,4 @@
-import 'package:trad/core.dart';
+import 'package:trad/src/models/track.dart';
 
 /// Maximum allowed character length for track and album titles.
 const _maxTitleLength = 500;

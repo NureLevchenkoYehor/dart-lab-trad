@@ -1,6 +1,10 @@
 import 'package:trad/core.dart';
-import 'package:trad/processing.dart';
-import 'package:trad/validation.dart';
+
+/// The number of days used for filtering recently released tracks.
+const _recentReleaseDaysThreshold = 1200;
+
+/// Default sample artist for report generation and filtering.
+const _targetArtist = 'Frizk';
 
 /// Sample CSV data containing music tracks for demonstration and testing.
 ///
