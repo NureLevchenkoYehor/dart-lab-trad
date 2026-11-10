@@ -20,3 +20,20 @@ extension DurationFormatting on Duration {
     return '$minutes хв $seconds с';
   }
 }
+
+/// Domain extensions for [DateTime].
+extension DateTimeDomainExtensions on DateTime {
+  /// Formats the date as an ISO date string (`YYYY-MM-DD`).
+  String toIsoDateOnly() {
+    final y = year.toString().padLeft(4, '0');
+    final m = month.toString().padLeft(2, '0');
+    final d = day.toString().padLeft(2, '0');
+    return '$y-$m-$d';
+  }
+
+  /// Returns the age in whole days from this date until [targetDate] (defaults to current time).
+  int ageInDays({DateTime? targetDate}) {
+    final reference = targetDate ?? DateTime.now();
+    return reference.difference(this).inDays;
+  }
+}
