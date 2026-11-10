@@ -131,7 +131,20 @@ void main() {
     );
   }
 
-  print('\n--- 6. Collection Processing Pipelines ---');
+  print('\n--- 6. Extension Methods (Duration, DateTime, Iterable<Track>) ---');
+  final totalDurationExtension = validTracks.totalDuration;
+  final avgDurationExtension = validTracks.averageDuration;
+  print(
+    'Total duration (toMinutesSecondsUk): ${totalDurationExtension.toMinutesSecondsUk()}',
+  );
+  print('Total duration (toMmSs): ${totalDurationExtension.toMmSs()}');
+  print('Average duration: ${avgDurationExtension.toMmSs()}');
+
+  final firstTrack = validTracks.first;
+  print('Track release date: ${firstTrack.releaseDate.toIsoDateOnly()}');
+  print('Track age in days: ${firstTrack.releaseDate.ageInDays()} days');
+
+  print('\n--- 7. Collection Processing Pipelines ---');
   final frizkTracks = filterTracksByArtist(validTracks, _targetArtist);
   print('Frizk tracks count: ${frizkTracks.length}');
 
@@ -156,13 +169,14 @@ void main() {
       .where(releasedWithin(days: _recentReleaseDaysThreshold))
       .toList();
   for (final t in recentTracks) {
-    final ageInDays = DateTime.now().difference(t.releaseDate).inDays;
-    print('- "${t.trackName}" (${t.releaseDate.year}, $ageInDays days old)');
+    print(
+      '- "${t.trackName}" (${t.releaseYear}, ${t.releaseDate.ageInDays()} days old)',
+    );
   }
 
   print('\n--- Tracks With Date Censored ---');
-  for (final t in validTracks) {
-    final releaseDate = t.releaseDate.toIso8601String().split('T').first;
+  for (final t in validTracks.take(3)) {
+    final releaseDate = t.releaseDate.toIsoDateOnly();
     print('- [${t.albumName}] ${t.trackName} | ${censorDate(releaseDate)}');
   }
 }

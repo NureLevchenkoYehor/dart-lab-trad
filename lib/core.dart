@@ -3,6 +3,7 @@ import 'package:trad/src/processing.dart';
 
 export 'package:trad/src/csv_parsing.dart';
 export 'package:trad/src/models/album.dart';
+export 'package:trad/src/models/extensions.dart';
 export 'package:trad/src/models/genre.dart';
 export 'package:trad/src/models/identifiable.dart';
 export 'package:trad/src/models/mixins.dart';
