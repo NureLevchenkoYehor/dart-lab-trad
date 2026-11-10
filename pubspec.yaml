@@ -1,7 +1,7 @@
 name: trad
 description: A music album catalog app.
 # version: 0.1.0
-# repository: https://github.com/NureLevchenkoYehor/...
+repository: https://github.com/NureLevchenkoYehor/dart-lab-trad
 
 environment:
   sdk: ^3.13.3
