@@ -193,7 +193,24 @@ void main() {
   print('Track release date: ${firstTrack.releaseDate.toIsoDateOnly()}');
   print('Track age in days: ${firstTrack.releaseDate.ageInDays()} days');
 
-  print('\n--- 9. Collection Processing Pipelines ---');
+  print('\n--- 9. Records & Destructuring (computeCatalogMetrics) ---');
+  final (:totalDuration, :averageDuration, :trackCount, :longestTrack) =
+      computeCatalogMetrics(validTracks);
+  print(
+    'Metrics: count=$trackCount, total=${totalDuration.toMmSs()}, avg=${averageDuration.toMmSs()}',
+  );
+  if (longestTrack != null) {
+    print(
+      'Longest track: "${longestTrack.trackName}" (${longestTrack.formattedDuration})',
+    );
+  }
+
+  print('\n--- 10. Pattern Matching on Tracks (when guards) ---');
+  for (final track in validTracks.take(4)) {
+    print('- "${track.trackName}": ${categorizeTrackPlayback(track)}');
+  }
+
+  print('\n--- 11. Collection Processing Pipelines ---');
   final frizkTracks = filterTracksByArtist(validTracks, _targetArtist);
   print('Frizk tracks count: ${frizkTracks.length}');
 

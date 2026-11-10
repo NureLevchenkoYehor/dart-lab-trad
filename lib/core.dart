@@ -14,6 +14,64 @@ export 'package:trad/src/models/track.dart';
 export 'package:trad/src/processing.dart';
 export 'package:trad/src/validation.dart';
 
+/// Aggregated catalog metrics returned as a typed record.
+typedef CatalogMetrics = ({
+  Duration totalDuration,
+  Duration averageDuration,
+  int trackCount,
+  Track? longestTrack,
+});
+
+/// Computes summary metrics across a collection of [tracks], returning a record.
+CatalogMetrics computeCatalogMetrics(Iterable<Track> tracks) {
+  if (tracks.isEmpty) {
+    return (
+      totalDuration: Duration.zero,
+      averageDuration: Duration.zero,
+      trackCount: 0,
+      longestTrack: null,
+    );
+  }
+
+  final trackList = tracks.toList();
+  final total = trackList.totalDuration;
+  final avg = trackList.averageDuration;
+
+  Track? longest;
+  for (final track in trackList) {
+    if (longest == null || track.duration > longest.duration) {
+      longest = track;
+    }
+  }
+
+  return (
+    totalDuration: total,
+    averageDuration: avg,
+    trackCount: trackList.length,
+    longestTrack: longest,
+  );
+}
+
+/// Categorizes a [Track] based on its duration and artist collaboration,
+/// demonstrating pattern matching with `when` guard clauses.
+String categorizeTrackPlayback(Track track) {
+  return switch (track) {
+    Track(:final duration) when duration.inMinutes >= 10 =>
+      'Epic (${duration.inMinutes} min)',
+    Track(:final duration) when duration.inSeconds < 60 =>
+      'Interlude (${duration.inSeconds} sec)',
+    Track(:final artists) when artists.length > 2 =>
+      'Collaboration (${artists.length} artists)',
+    Track() => 'Standard Track (${track.formattedDuration})',
+  };
+}
+
+/// Convenience function that safely parses a CSV [row] into a [Track].
+///
+/// Provided for backwards compatibility with Laboratory Work 1;
+/// delegates directly to [Track.tryFromCsv].
+Track? tryParseTrackCsvRow(String row) => Track.tryFromCsv(row);
+
 /// Formats a detailed discography and duration report for the specified [artist].
 ///
 /// Filters [tracks] by [artist], calculates average playback metrics, and groups
