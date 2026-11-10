@@ -69,7 +69,21 @@ void main() {
       .where((t) => validateTrack(t).isEmpty)
       .toList();
 
-  print('\n--- 2. Factory Constructors: Cached & WithDefault ---');
+  print('\n--- 2. Generic Repository<Track extends Identifiable> ---');
+  final repository = Repository<Track>();
+  repository.addAll(validTracks);
+  print('Total items loaded in repository: ${repository.count}');
+
+  final lookupId = validTracks.first.id;
+  final foundTrack = repository.findById(lookupId);
+  print('Lookup by id "$lookupId": ${foundTrack?.trackName}');
+
+  final shortTracks = repository
+      .where((t) => t.duration.inMinutes < 2)
+      .toList();
+  print('Tracks under 2 minutes in repository: ${shortTracks.length}');
+
+  print('\n--- 3. Factory Constructors: Cached & WithDefault ---');
   final cachedA = Track.cached(
     id: 'frizk:all_my_fellas',
     trackName: 'ALL MY FELLAS',
@@ -91,7 +105,7 @@ void main() {
   final fallbackTrack = Track.withDefault();
   print('Fallback default track: $fallbackTrack');
 
-  print('\n--- 3. Operator == & hashCode (Set Deduplication) ---');
+  print('\n--- 4. Operator == & hashCode (Set Deduplication) ---');
   final trackCopy1 = Track.create(
     id: 'frizk:bitrate',
     trackName: 'Bitrate',
@@ -112,7 +126,7 @@ void main() {
   print('trackCopy1 == trackCopy2: ${trackCopy1 == trackCopy2}');
   print('Set size with two equal elements: ${trackSet.length} (expected: 1)');
 
-  print('\n--- 4. Mixin Auditable on Identifiable (Track & Album) ---');
+  print('\n--- 5. Mixin Auditable on Identifiable (Track & Album) ---');
   final sampleAlbum = Album(
     id: 'alb-forgotten-arcade',
     title: 'Forgotten Arcade',
@@ -124,14 +138,14 @@ void main() {
   print(sampleAlbum.formatAuditEntry(action: 'PURCHASE_ALBUM'));
   print('Album URN: ${sampleAlbum.urn}');
 
-  print('\n--- 5. Enhanced Enum MusicGenre ---');
+  print('\n--- 6. Enhanced Enum MusicGenre ---');
   for (final genre in MusicGenre.values) {
     print(
       '${genre.formatBadge()} (Explicit: ${genre.allowsExplicitLyrics}, Code: ${genre.code})',
     );
   }
 
-  print('\n--- 6. Extension Methods (Duration, DateTime, Iterable<Track>) ---');
+  print('\n--- 7. Extension Methods (Duration, DateTime, Iterable<Track>) ---');
   final totalDurationExtension = validTracks.totalDuration;
   final avgDurationExtension = validTracks.averageDuration;
   print(
@@ -144,7 +158,7 @@ void main() {
   print('Track release date: ${firstTrack.releaseDate.toIsoDateOnly()}');
   print('Track age in days: ${firstTrack.releaseDate.ageInDays()} days');
 
-  print('\n--- 7. Collection Processing Pipelines ---');
+  print('\n--- 8. Collection Processing Pipelines ---');
   final frizkTracks = filterTracksByArtist(validTracks, _targetArtist);
   print('Frizk tracks count: ${frizkTracks.length}');
 

@@ -7,6 +7,7 @@ export 'package:trad/src/models/extensions.dart';
 export 'package:trad/src/models/genre.dart';
 export 'package:trad/src/models/identifiable.dart';
 export 'package:trad/src/models/mixins.dart';
+export 'package:trad/src/models/repository.dart';
 export 'package:trad/src/models/track.dart';
 export 'package:trad/src/processing.dart';
 export 'package:trad/src/validation.dart';
