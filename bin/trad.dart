@@ -138,14 +138,49 @@ void main() {
   print(sampleAlbum.formatAuditEntry(action: 'PURCHASE_ALBUM'));
   print('Album URN: ${sampleAlbum.urn}');
 
-  print('\n--- 6. Enhanced Enum MusicGenre ---');
+  print('\n--- 6. Sealed Hierarchy (AudioItem) & Polymorphic Methods ---');
+  final audioItems = <AudioItem>[
+    StudioTrack(
+      id: 'studio-1',
+      title: 'Echoes of Silence',
+      duration: const Duration(minutes: 11, seconds: 20),
+      studioName: 'Abbey Road Studios',
+    ),
+    LiveRecording(
+      id: 'live-1',
+      title: 'Rockin in the Free World',
+      duration: const Duration(minutes: 6, seconds: 45),
+      venue: 'Glastonbury Festival',
+      concertDate: DateTime.utc(2023, 6, 24),
+    ),
+    RemixTrack(
+      id: 'remix-1',
+      title: 'Bitrate Club Edit',
+      duration: const Duration(minutes: 4, seconds: 15),
+      remixer: 'Club Edit',
+      originalTrackTitle: 'Bitrate',
+    ),
+    PodcastEpisode(
+      id: 'podcast-1',
+      title: 'History of Synthesizers',
+      duration: const Duration(minutes: 45),
+      episodeNumber: 1,
+    ),
+  ];
+
+  for (final item in audioItems) {
+    print('- Polymorphic summary: ${item.formatSummary()}');
+    print('  Pattern match (with when guard): ${describeAudioItem(item)}');
+  }
+
+  print('\n--- 7. Enhanced Enum MusicGenre ---');
   for (final genre in MusicGenre.values) {
     print(
       '${genre.formatBadge()} (Explicit: ${genre.allowsExplicitLyrics}, Code: ${genre.code})',
     );
   }
 
-  print('\n--- 7. Extension Methods (Duration, DateTime, Iterable<Track>) ---');
+  print('\n--- 8. Extension Methods (Duration, DateTime, Iterable<Track>) ---');
   final totalDurationExtension = validTracks.totalDuration;
   final avgDurationExtension = validTracks.averageDuration;
   print(
@@ -158,7 +193,7 @@ void main() {
   print('Track release date: ${firstTrack.releaseDate.toIsoDateOnly()}');
   print('Track age in days: ${firstTrack.releaseDate.ageInDays()} days');
 
-  print('\n--- 8. Collection Processing Pipelines ---');
+  print('\n--- 9. Collection Processing Pipelines ---');
   final frizkTracks = filterTracksByArtist(validTracks, _targetArtist);
   print('Frizk tracks count: ${frizkTracks.length}');
 
